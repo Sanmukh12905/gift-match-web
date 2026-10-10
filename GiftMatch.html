@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GiftMatch — Find the right gift</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff8f5;color:#242124}
+header{padding:28px 20px;text-align:center;background:linear-gradient(135deg,#ff6b6b,#ff9f68);color:white}
+h1{margin:0;font-size:34px}.tag{margin:8px 0 0;font-size:16px}
+main{max-width:900px;margin:25px auto;padding:0 16px}.card{background:white;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 5px 20px #0000000d}
+h2{font-size:20px;margin:0 0 15px}label{font-weight:650;display:block;margin:14px 0 7px}
+select,input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:16px;background:white}
+.chips{display:flex;flex-wrap:wrap;gap:9px}.chip{padding:10px 13px;border:1px solid #ddd;border-radius:999px;cursor:pointer;background:#fff}.chip.active{background:#ffe4dc;border-color:#ff7865}
+button{border:0;border-radius:12px;padding:13px 18px;font-size:16px;font-weight:700;cursor:pointer}
+.primary{width:100%;background:#ff6b6b;color:white;margin-top:18px}.secondary{background:#fff0eb;color:#d94c3c}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.gift{border:1px solid #eee;border-radius:15px;padding:16px}.gift h3{margin:0 0 7px}.price{font-weight:800;color:#d94c3c}.why{font-size:14px;color:#555;line-height:1.45}.fav{float:right;background:none;padding:0;font-size:22px}
+.empty{text-align:center;color:#666;padding:20px}
+footer{text-align:center;color:#777;padding:20px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎁 GiftMatch</h1>
+  <div class="tag">Find a thoughtful gift that fits the person, occasion & budget.</div>
+</header>
+
+<main>
+<section class="card">
+<h2>Tell us about the gift</h2>
+
+<label>Occasion</label>
+<select id="occasion">
+<option>Birthday</option><option>Anniversary</option><option>Wedding</option>
+<option>Graduation</option><option>Festival</option><option>Friendship</option>
+<option>Thank You</option><option>Farewell</option><option>Other</option>
+</select>
+
+<label>Who is it for?</label>
+<select id="recipient">
+<option>Mother</option><option>Father</option><option>Brother</option>
+<option>Sister</option><option>Friend</option><option>Partner</option>
+<option>Teacher</option><option>Colleague</option><option>Child</option><option>Other</option>
+</select>
+
+<label>Budget (₹)</label>
+<input id="budget" type="number" min="50" value="500" placeholder="e.g. 500">
+
+<label>Interests</label>
+<div class="chips" id="chips">
+<span class="chip">Technology</span><span class="chip">Gaming</span><span class="chip">Books</span>
+<span class="chip">Sports</span><span class="chip">Music</span><span class="chip">Art</span>
+<span class="chip">Fashion</span><span class="chip">Food</span><span class="chip">Fitness</span>
+<span class="chip">Travel</span><span class="chip">Photography</span><span class="chip">Home</span>
+</div>
+
+<button class="primary" onclick="findGifts()">Find My Gifts ✨</button>
+</section>
+
+<section class="card" id="resultCard" style="display:none">
+<h2>Recommended gifts</h2>
+<div id="results" class="results"></div>
+</section>
+</main>
+
+<footer>GiftMatch is a recommendation tool. Prices are estimates and may vary by seller.</footer>
+
+<script>
+const gifts=[
+{name:"Personalized Mug",price:199,tags:["Food","Home","Art"],why:"Easy to personalize with a name, photo or message."},
+{name:"Journal & Pen Set",price:299,tags:["Books","Art","Home"],why:"A useful and personal choice for someone who enjoys writing."},
+{name:"Phone Stand",price:249,tags:["Technology","Home"],why:"Practical for watching videos, studying or video calls."},
+{name:"Bluetooth Speaker",price:899,tags:["Music","Technology"],why:"A fun choice for music lovers; useful at home or outdoors."},
+{name:"Gaming Mouse Pad",price:399,tags:["Gaming","Technology"],why:"A practical upgrade for a PC or gaming setup."},
+{name:"Novel / Book",price:299,tags:["Books"],why:"A thoughtful option when you know the person's reading interests."},
+{name:"Sports Water Bottle",price:349,tags:["Sports","Fitness"],why:"Useful for school, workouts and outdoor activities."},
+{name:"Mini Photo Album",price:249,tags:["Photography","Art","Home"],why:"Lets you turn shared memories into a physical keepsake."},
+{name:"Plant & Decorative Pot",price:399,tags:["Home","Art"],why:"A simple gift that adds something living to a room."},
+{name:"Art Supply Kit",price:499,tags:["Art"],why:"Great for someone who enjoys drawing, sketching or crafts."},
+{name:"Travel Organizer",price:449,tags:["Travel"],why:"A practical accessory for keeping travel documents and small items organized."},
+{name:"Insulated Bottle",price:599,tags:["Fitness","Sports","Travel"],why:"Useful every day and suitable for school, work or travel."},
+{name:"Photo Frame",price:299,tags:["Photography","Home","Art"],why:"A simple way to display a memorable photo."},
+{name:"Snack / Chocolate Gift Box",price:299,tags:["Food"],why:"An easy celebratory gift for many occasions."},
+{name:"Simple Bracelet",price:199,tags:["Fashion","Art"],why:"A small personal accessory that works well as a casual gift."},
+{name:"Desk Organizer",price:349,tags:["Home","Technology"],why:"Useful for keeping a study or work desk tidy."},
+{name:"Earphones Case",price:149,tags:["Technology","Fashion"],why:"A small, affordable accessory for someone who uses earphones."},
+{name:"Custom Keychain",price:149,tags:["Art","Fashion"],why:"Small, affordable and easy to personalize."}
+];
+
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>c.classList.toggle("active"));
+
+function findGifts(){
+ const budget=Math.max(50,Number(document.getElementById("budget").value)||500);
+ const interests=[...document.querySelectorAll(".chip.active")].map(x=>x.textContent);
+ const occasion=document.getElementById("occasion").value;
+ const recipient=document.getElementById("recipient").value;
+ let pool=gifts.filter(g=>g.price<=budget);
+ if(!pool.length) pool=gifts.slice().sort((a,b)=>a.price-b.price).slice(0,6);
+ pool.sort((a,b)=>{
+   const sa=a.tags.filter(t=>interests.includes(t)).length;
+   const sb=b.tags.filter(t=>interests.includes(t)).length;
+   return sb-sa || Math.abs(a.price-budget/1.4)-Math.abs(b.price-budget/1.4);
+ });
+ pool=pool.slice(0,9);
+ document.getElementById("results").innerHTML=pool.map((g,i)=>`
+ <article class="gift">
+ <button class="fav" onclick="this.textContent=this.textContent==='♡'?'♥':'♡'">♡</button>
+ <h3>${g.name}</h3><div class="price">₹${g.price}</div>
+ <p class="why">${g.why}</p>
+ <small>For ${recipient} • ${occasion}</small>
+ </article>`).join("");
+ document.getElementById("resultCard").style.display="block";
+ document.getElementById("resultCard").scrollIntoView({behavior:"smooth"});
+}
+</script>
+</body>
+</html>
